@@ -1,0 +1,23 @@
+server:
+  port: 8888
+  tomcat:
+    uri-encoding: utf-8
+
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    username: yx
+    password: 666666
+    url: jdbc:mysql://192.168.5.134:3306/ac?serverTimezone=GMT&characterEncoding=UTF8
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+
+  jpa:
+    show-sql: true
+    database: mysql
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+
