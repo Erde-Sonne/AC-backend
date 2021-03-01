@@ -41,7 +41,7 @@ public class SocketClientTask extends AbstractStoppableTask {
             }
             byteBuffer.clear();
             //接收数据
-            int len = 0;
+            /*int len = 0;
             StringBuilder stringBuilder = new StringBuilder();
             while ((len = socketChannel.read(byteBuffer)) >= 0) {
                 byteBuffer.flip();
@@ -49,8 +49,9 @@ public class SocketClientTask extends AbstractStoppableTask {
                 byteBuffer.clear();
                 stringBuilder.append(res);
             }
-            String payload = stringBuilder.toString();
+            String payload = stringBuilder.toString();*/
             socketChannel.close();
+            String payload = "send ok";
             responseHandler.handle(payload);
         } catch (IOException e) {
             e.printStackTrace();

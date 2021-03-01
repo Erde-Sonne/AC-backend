@@ -14,6 +14,10 @@ public class UserVerifyService {
         return userVerifyRepository.getUserByNameAndPassword(userName, password);
     }
 
+    public UserVerify getUserByMacAndSwitcher(String mac, String switcher) {
+        return userVerifyRepository.getUserByMacAndSwitcher(mac, switcher);
+    }
+
     public void addUserVerify(UserVerify user) {
         userVerifyRepository.save(user);
     }

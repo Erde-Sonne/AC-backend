@@ -8,7 +8,7 @@ spring:
     type: com.alibaba.druid.pool.DruidDataSource
     username: yx
     password: 666666
-    url: jdbc:mysql://192.168.1.36:3306/ac?serverTimezone=GMT&characterEncoding=UTF8
+    url: jdbc:mysql://192.168.5.137:3306/ac?serverTimezone=GMT&characterEncoding=UTF8
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 
@@ -19,4 +19,5 @@ spring:
       ddl-auto: update
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
         format_sql: true

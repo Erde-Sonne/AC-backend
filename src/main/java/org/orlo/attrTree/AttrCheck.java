@@ -23,6 +23,7 @@ public class AttrCheck {
     public boolean Check(){
         Nodes p = new constructTree().parsePolicyPostfix(policy);
         String[] Attrs = new getAttr().parseAttribute(attr);
+
         new checkSatisfiable().checkSatisfy(p, Attrs);
         return  p.satisfiable;
     }
