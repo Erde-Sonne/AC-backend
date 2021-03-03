@@ -63,21 +63,43 @@ public class UserDataController {
                 String srcMAC = oneData.getString("srcMAC");
                 String dstIP = oneData.getString("dstIP");
                 String dstMAC = oneData.getString("dstMAC");
+                String srcPort = oneData.getString("srcPort");
+                String dstPort = oneData.getString("dstPort");
+                String protocol = oneData.getString("protocol");
                 Long time = oneData.getLong("time");
                 Long packets = oneData.getLong("packets");
                 Long bytes = oneData.getLong("bytes");
                 Long life = oneData.getLong("life");
+                Long maxflow = 0L;
                 String key = "";
                 if (!srcIP.equals("")) {
                     key = srcIP + ">" + dstMAC;
                 } else if(!srcMAC.equals("")) {
                     key = srcMAC + ">" + dstIP;
                 }
+                String preData = jedis.lindex(key, -1);
+                //取出前一条数据
+                if (preData != null) {
+                    JSONObject preJson = JSONObject.parseObject(preData);
+                    Long preBytes = preJson.getLong("bytes");
+                    maxflow = (bytes - preBytes) / 20;
+                    Long preMaxflow = preJson.getLong("maxflow");
+                    maxflow = Math.max(maxflow, preMaxflow);
+                } else {
+                    //该流第一条数据
+                    maxflow = bytes / 20;
+                }
+
                 JSONObject tmp = new JSONObject();
                 tmp.put("time",time);
                 tmp.put("packets",packets);
                 tmp.put("bytes",bytes);
                 tmp.put("life",life);
+                tmp.put("maxflow",maxflow);
+                tmp.put("srcPort",srcPort);
+                tmp.put("dstPort",dstPort);
+                tmp.put("protocol",protocol);
+
                 jedis.lpush(key,tmp.toJSONString());
                 System.out.println( "key:" + key + "  -->" + tmp.toJSONString());
                 currentKeys.add(key);

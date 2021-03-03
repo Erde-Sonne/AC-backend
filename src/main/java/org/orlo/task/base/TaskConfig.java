@@ -1,11 +1,11 @@
 package org.orlo.task.base;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.*;
 
 public class TaskConfig {
-    ExecutorService pool= Executors.newCachedThreadPool();
+    ExecutorService pool= new ThreadPoolExecutor(10, 20, 60,
+            TimeUnit.SECONDS, new ArrayBlockingQueue<>(10), Executors.defaultThreadFactory(),
+            new ThreadPoolExecutor.DiscardOldestPolicy());
     ScheduledExecutorService scheduledPool= Executors.newScheduledThreadPool(10);
     static TaskConfig instance=new TaskConfig();
     private TaskConfig(){}
