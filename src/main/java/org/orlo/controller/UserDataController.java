@@ -21,7 +21,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 @RequestMapping("/data")
 public class UserDataController {
     Set<String> redisKeys = new CopyOnWriteArraySet<>();
-    Jedis jedis = new Jedis("192.168.1.36", 6379);
+    Jedis jedis = new Jedis("127.0.0.1", 6379);
 
     @Autowired
     UserDataService userDataService;

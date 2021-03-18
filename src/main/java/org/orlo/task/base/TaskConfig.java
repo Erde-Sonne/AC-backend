@@ -19,7 +19,7 @@ public class TaskConfig {
         return scheduledPool;
     }
 
-    public static final String CONTROLLER_IP = "192.168.5.137";
+    public static final String CONTROLLER_IP = "192.168.1.49";
     public static final int CONTROLLER_PORT = 1060;
 }
 

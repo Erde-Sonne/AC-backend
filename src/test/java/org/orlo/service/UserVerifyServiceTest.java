@@ -30,7 +30,7 @@ public class UserVerifyServiceTest {
 
 
         UserVerify userVerify1 = new UserVerify();
-        userVerify1.setUsername("C");
+        userVerify1.setUsername("desktop");
         userVerify1.setPassword("123456");
         userVerify1.setDepartment("电子科技大学");
         userVerify1.setType("学生");
@@ -38,8 +38,8 @@ public class UserVerifyServiceTest {
         userVerify1.setSafe("5");
         userVerify1.setTime("16:00-24:00");
         userVerify1.setIp("192.168.1.1/16");
-        userVerify1.setMAC("00:00:00:ff:00:00");
-        userVerify1.setSwitcher("s1");
+        userVerify1.setMAC("B0:25:AA:14:C1:E8");
+        userVerify1.setSwitcher("9");
         userVerify1.setPort("1");
 
         userVerifyService.addUserVerify(userVerify);

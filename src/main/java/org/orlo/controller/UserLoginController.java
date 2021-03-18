@@ -10,15 +10,22 @@ import org.orlo.task.base.TaskConfig;
 import org.orlo.util.Helper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import redis.clients.jedis.Jedis;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.locks.ReentrantLock;
 
 @RestController
 @RequestMapping("/user")
 public class UserLoginController {
     static HashMap<String, AttrCheck> attrCheckMap = new HashMap<>();
+    Set<String> userKeys = new HashSet<>();
+    Map<String, UserVerify> userVerifyCache = new HashMap<>();
     ReentrantLock reentrantLock = new ReentrantLock();
     static {
         AttrCheck source1 = new AttrCheck();
@@ -69,6 +76,7 @@ public class UserLoginController {
             }
         }
     }
+
     @PostMapping("/verifyByMac")
     public String verifyUserByMac(@RequestParam Map<String, String> params) {
         String srcMac = params.get("srcMac");
@@ -79,14 +87,25 @@ public class UserLoginController {
         String dstPort = params.get("dstPort");
         String protocol = params.get("protocol");
         System.out.println(params.toString());
-        UserVerify userByMacAndSwitcher = userVerifyService.getUserByMacAndSwitcher(srcMac, switcher);
+        String key = srcMac + "&" + switcher;
+
+        UserVerify userByMacAndSwitcher = null;
+        if (userKeys.contains(key)) {
+            userByMacAndSwitcher = userVerifyCache.get(key);
+        } else {
+            userByMacAndSwitcher = userVerifyService.getUserByMacAndSwitcher(srcMac, switcher);
+            if (userByMacAndSwitcher != null) {
+                userKeys.add(key);
+                userVerifyCache.put(key, userByMacAndSwitcher);
+            }
+        }
         if (userByMacAndSwitcher == null) {
             System.out.println("没有该用户，要注册");
             return "false";
         }
         AttrCheck attrCheck = attrCheckMap.get(dstIP);
         if(attrCheck == null) {
-            System.out.println("没有该资源的属性树,配置接入互联网");
+//            System.out.println("没有该资源的属性树,配置接入互联网");
             AttrCheck internet = attrCheckMap.get("internet");
             internet.getUserAttr(userByMacAndSwitcher);
             boolean pass = internet.Check();
