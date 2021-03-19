@@ -10,7 +10,7 @@ import java.util.Properties;
 
 public class Producer {
 
-    private static KafkaProducer<String,String> producer = null;
+    public static final KafkaProducer<String,String> producer;
     /*
     初始化生产者
      */
@@ -38,7 +38,7 @@ public class Producer {
         //消息实体
         ProducerRecord<String , String> record = null;
         for (int i = 0; i < 100; i++) {
-            record = new ProducerRecord<String, String>(MQDict.PRODUCER_TOPIC, "value"+i);
+            record = new ProducerRecord<String, String>(MQDict.PRODUCER_TOPICB, "value"+i);
             //发送消息
             producer.send(record, new Callback() {
                 @Override

@@ -9,12 +9,14 @@ import org.orlo.entity.UserData;
 import org.orlo.entity.UserFlowData;
 import org.orlo.service.UserDataService;
 import org.orlo.service.UserFlowDataService;
+import org.orlo.task.KafkaListenerTask;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import redis.clients.jedis.Jedis;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 @RestController
@@ -108,6 +110,9 @@ public class UserDataController {
         }
 
 
+
+
+
         /**
          * 检查redis中的key是否在当前请求的key set 中
          */
@@ -140,4 +145,17 @@ public class UserDataController {
         });
 
     }
+
+
+    @PostMapping("/postDynamicData")
+    public void postDynamicData(@RequestParam Map<String, String> params) {
+        String data = params.get("data");
+        JSONObject jsonObject = JSON.parseObject(data);
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String format = df.format(new Date());
+        jedis.lpush("dynamicData", data);
+        System.out.println(format + "--------------------------------------------------------------------------------------------------");
+        System.out.println(data);
+    }
+
 }

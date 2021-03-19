@@ -9,7 +9,7 @@ import java.util.Properties;
 
 public class Consumer {
 
-    private static KafkaConsumer<String,String> consumer;
+    public static final KafkaConsumer<String,String> consumer;
 
     /**
      *  初始化消费者
@@ -17,7 +17,7 @@ public class Consumer {
     static {
         Properties configs = initConfig();
         consumer = new KafkaConsumer<String, String>(configs);
-        consumer.subscribe(Arrays.asList(MQDict.CONSUMER_TOPIC));
+        consumer.subscribe(Arrays.asList(MQDict.CONSUMER_TOPICA, MQDict.CONSUMER_TOPICC, MQDict.CONSUMER_TOPICD));
     }
     /**
      *  初始化配置
@@ -45,5 +45,4 @@ public class Consumer {
             });
         }
     }
-
 }

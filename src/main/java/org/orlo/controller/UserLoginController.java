@@ -5,7 +5,9 @@ import org.orlo.entity.UserUnVerify;
 import org.orlo.entity.UserVerify;
 import org.orlo.service.UserUnVerifyService;
 import org.orlo.service.UserVerifyService;
+import org.orlo.task.KafkaListenerTask;
 import org.orlo.task.SocketClientTask;
+import org.orlo.task.VerifyByMacTask;
 import org.orlo.task.base.TaskConfig;
 import org.orlo.util.Helper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,16 +18,21 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
 
 @RestController
 @RequestMapping("/user")
 public class UserLoginController {
     static HashMap<String, AttrCheck> attrCheckMap = new HashMap<>();
-    Set<String> userKeys = new HashSet<>();
-    Map<String, UserVerify> userVerifyCache = new HashMap<>();
+    static Set<String> userKeys = new HashSet<>();
+    static Map<String, UserVerify> userVerifyCache = new HashMap<>();
+    public static BlockingQueue<String> blockingQueueA = new LinkedBlockingQueue<>();
+    public static BlockingQueue<String> blockingQueueC = new LinkedBlockingQueue<>();
+    public static BlockingQueue<String> blockingQueueD = new LinkedBlockingQueue<>();
     ReentrantLock reentrantLock = new ReentrantLock();
     static {
         AttrCheck source1 = new AttrCheck();
@@ -38,6 +45,14 @@ public class UserLoginController {
             attrCheckMap.put("10.0.0." + i, source1);
         }
         attrCheckMap.put("internet", source3);
+
+      /*  KafkaListenerTask kafkaListenerTask = new KafkaListenerTask(blockingQueueA, blockingQueueC, blockingQueueD);
+        kafkaListenerTask.start();
+        System.out.println("********************** kafka listener start");
+
+        VerifyByMacTask verifyByMacTask = new VerifyByMacTask(blockingQueueA, userKeys, userVerifyCache, attrCheckMap);
+        verifyByMacTask.start();
+        System.out.println("********************** verify by mac start");*/
     }
 
     @Autowired
@@ -86,7 +101,7 @@ public class UserLoginController {
         String srcPort = params.get("srcPort");
         String dstPort = params.get("dstPort");
         String protocol = params.get("protocol");
-        System.out.println(params.toString());
+//        System.out.println(params.toString());
         String key = srcMac + "&" + switcher;
 
         UserVerify userByMacAndSwitcher = null;
@@ -110,7 +125,7 @@ public class UserLoginController {
             internet.getUserAttr(userByMacAndSwitcher);
             boolean pass = internet.Check();
             if (pass) {
-                System.out.println("认证成功了哦");
+//                System.out.println("认证成功了哦");
                 sendMsgToController(srcMac, dstIP, switcher, srcPort, dstPort, protocol);
                 return "success";
             }
@@ -120,7 +135,7 @@ public class UserLoginController {
         attrCheck.getUserAttr(userByMacAndSwitcher);
         boolean pass = attrCheck.Check();
         if(pass) {
-            System.out.println("认证成功了");
+//            System.out.println("认证成功了");
             sendMsgToController(srcMac, dstIP, switcher, srcPort, dstPort, protocol);
             return "success";
         }
@@ -135,7 +150,7 @@ public class UserLoginController {
                             "\"srcPort\":\"%s\", \"dstPort\":\"%s\", \"protocol\":\"%s\"}",
                     srcMac, dstIP, switcher, srcPort, dstPort, protocol);
             SocketClientTask socketClientTask = new SocketClientTask(msgToController, (o) -> {
-                System.out.println("send ok");
+//                System.out.println("send ok");
             },
                     TaskConfig.CONTROLLER_IP, TaskConfig.CONTROLLER_PORT);
             socketClientTask.start();

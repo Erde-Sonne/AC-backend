@@ -4,8 +4,11 @@ import java.time.Duration;
 
 public class MQDict {
     public static final String MQ_ADDRESS_COLLECTION = "127.0.0.1:9092";			//kafka地址
-    public static final String CONSUMER_TOPIC = "topicDemo";						//消费者连接的topic
-    public static final String PRODUCER_TOPIC = "topicDemo";						//生产者连接的topic
+    public static final String CONSUMER_TOPICA = "topicA";						//消费者连接的topic
+    public static final String PRODUCER_TOPICB = "topicB";						//生产者连接的topic
+    public static final String CONSUMER_TOPICC = "topicC";						//消费者连接的topic
+    public static final String CONSUMER_TOPICD = "topicD";						//消费者连接的topic
+
     public static final String CONSUMER_GROUP_ID = "1";								//groupId，可以分开配置
     public static final String CONSUMER_ENABLE_AUTO_COMMIT = "true";				//是否自动提交（消费者）
     public static final String CONSUMER_AUTO_COMMIT_INTERVAL_MS = "1000";
