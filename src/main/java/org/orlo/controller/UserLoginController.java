@@ -1,8 +1,10 @@
 package org.orlo.controller;
 
 import org.orlo.attrTree.AttrCheck;
+import org.orlo.entity.UserLogin;
 import org.orlo.entity.UserUnVerify;
 import org.orlo.entity.UserVerify;
+import org.orlo.service.UserLoginService;
 import org.orlo.service.UserUnVerifyService;
 import org.orlo.service.UserVerifyService;
 import org.orlo.task.KafkaListenerTask;
@@ -59,6 +61,8 @@ public class UserLoginController {
     UserUnVerifyService userUnVerifyService;
     @Autowired
     UserVerifyService userVerifyService;
+    @Autowired
+    UserLoginService userLoginService;
     @PostMapping("/login")
     public String userLogin(@RequestBody Map<String, String> params) {
         String userName = params.get("username");
@@ -75,16 +79,13 @@ public class UserLoginController {
             Check.setPolicy("学生,电子科技大学,4*securityLevel*,3of3,管理员,*time*14:00-24:00,2of3");
             boolean pass = Check.Check();
             if(pass) {
-                String msgToController = "{\"status\":1, \"toInternet\":1 , \"hostId\":9, \"dstIds\":[2,5]}";
-                SocketClientTask socketClientTask = new SocketClientTask(msgToController, System.out::println,
-                        TaskConfig.CONTROLLER_IP, TaskConfig.CONTROLLER_PORT);
-                socketClientTask.start();
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                socketClientTask.stop();
+                UserLogin userLogin = new UserLogin();
+                userLogin.setUsername(userVerify.getUsername());
+                userLogin.setPassword(userVerify.getPassword());
+                userLogin.setMAC(userVerify.getMAC());
+                userLoginService.addRow(userLogin);
+                //将登录成功的Mac发送给onos
+                sendMsgToController(userVerify.getMAC());
                 return "登录成功";
             } else {
                 return "失败，未得到授权";
@@ -146,7 +147,7 @@ public class UserLoginController {
     public void sendMsgToController(String srcMac, String dstIP, String switcher,
                                            String srcPort, String dstPort, String protocol) {
 
-            String msgToController = String.format("{\"srcMac\":\"%s\", \"dstIP\":\"%s\", \"switcher\":\"%s\", " +
+            String msgToController = String.format("{\"info\":\"1\", \"srcMac\":\"%s\", \"dstIP\":\"%s\", \"switcher\":\"%s\", " +
                             "\"srcPort\":\"%s\", \"dstPort\":\"%s\", \"protocol\":\"%s\"}",
                     srcMac, dstIP, switcher, srcPort, dstPort, protocol);
             SocketClientTask socketClientTask = new SocketClientTask(msgToController, (o) -> {
@@ -160,6 +161,20 @@ public class UserLoginController {
                 e.printStackTrace();
             }
             socketClientTask.stop();
+    }
 
+    public void sendMsgToController(String loginMac) {
+        String msgToController = String.format("{\"info\":\"2\", \"loginMac\":\"%s\"}", loginMac);
+        SocketClientTask socketClientTask = new SocketClientTask(msgToController, (o) -> {
+//                System.out.println("send ok");
+        },
+                TaskConfig.CONTROLLER_IP, TaskConfig.CONTROLLER_PORT);
+        socketClientTask.start();
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        socketClientTask.stop();
     }
 }
