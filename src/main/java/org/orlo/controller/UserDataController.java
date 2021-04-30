@@ -10,6 +10,8 @@ import org.orlo.entity.UserFlowData;
 import org.orlo.service.UserDataService;
 import org.orlo.service.UserFlowDataService;
 import org.orlo.task.KafkaListenerTask;
+import org.orlo.task.PeriodicalSocketClientTask;
+import org.orlo.task.base.TaskConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import redis.clients.jedis.Jedis;
@@ -22,9 +24,30 @@ import java.util.concurrent.CopyOnWriteArraySet;
 @RestController
 @RequestMapping("/data")
 public class UserDataController {
+
+    static {
+        PeriodicalSocketClientTask.RequestGenerator requestGenerator = () -> {
+            String req = "default";
+            return req;
+        };
+        PeriodicalSocketClientTask.ResponseHandler responseHandler = (String resp) -> {
+            System.out.println(resp);
+            JSONObject jsonObject = JSON.parseObject(resp);
+            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String format = df.format(new Date());
+            System.out.println(format + "--------------------------------------------------------------------------------------------------");
+
+        };
+        //间隔20s向信任度计算服务器发出计算请求
+ /*       PeriodicalSocketClientTask socketClientTask = new PeriodicalSocketClientTask(TaskConfig.LOF_IP,
+                TaskConfig.LOF_PORT, requestGenerator, responseHandler);
+        socketClientTask.setDelay(1);
+        socketClientTask.setInterval(20);
+        socketClientTask.start();*/
+    }
+
     Set<String> redisKeys = new CopyOnWriteArraySet<>();
     Jedis jedis = new Jedis("127.0.0.1", 6379);
-
     @Autowired
     UserDataService userDataService;
     @Autowired
@@ -110,15 +133,16 @@ public class UserDataController {
         }
 
 
-
-
-
         /**
          * 检查redis中的key是否在当前请求的key set 中
          */
+
         redisKeys.forEach((key) -> {
             //如果当前请求的key集合中没有redis中的key,说明该访问资源流表已经失效，要清除redis中的key并且把数据存入mysql
            if (!currentKeys.contains(key)) {
+               //首先，会发送消息到计算信任度服务器，
+
+
                List<String> lrange = jedis.lrange(key, 0, -1);
                if (lrange == null) {
                    return;
@@ -145,7 +169,6 @@ public class UserDataController {
         });
 
     }
-
 
     @PostMapping("/postDynamicData")
     public void postDynamicData(@RequestParam Map<String, String> params) {

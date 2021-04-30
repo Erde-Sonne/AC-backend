@@ -7,19 +7,14 @@ import org.orlo.entity.UserVerify;
 import org.orlo.service.UserLoginService;
 import org.orlo.service.UserUnVerifyService;
 import org.orlo.service.UserVerifyService;
-import org.orlo.task.KafkaListenerTask;
-import org.orlo.task.SocketClientTask;
-import org.orlo.task.VerifyByMacTask;
+import org.orlo.task.*;
 import org.orlo.task.base.TaskConfig;
 import org.orlo.util.Helper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import redis.clients.jedis.Jedis;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -47,7 +42,6 @@ public class UserLoginController {
             attrCheckMap.put("10.0.0." + i, source1);
         }
         attrCheckMap.put("internet", source3);
-
       /*  KafkaListenerTask kafkaListenerTask = new KafkaListenerTask(blockingQueueA, blockingQueueC, blockingQueueD);
         kafkaListenerTask.start();
         System.out.println("********************** kafka listener start");
@@ -55,6 +49,7 @@ public class UserLoginController {
         VerifyByMacTask verifyByMacTask = new VerifyByMacTask(blockingQueueA, userKeys, userVerifyCache, attrCheckMap);
         verifyByMacTask.start();
         System.out.println("********************** verify by mac start");*/
+
     }
 
     @Autowired
@@ -85,7 +80,15 @@ public class UserLoginController {
                 userLogin.setMAC(userVerify.getMAC());
                 userLoginService.addRow(userLogin);
                 //将登录成功的Mac发送给onos
-                sendMsgToController(userVerify.getMAC());
+                sendMsgToController("2", userVerify.getMAC(), userVerify.getSwitcher());
+                //一段时间后失效
+//                Timer timer=new Timer();
+//                TimerTask task=new TimerTask(){
+//                    public void run(){
+//                        sendMsgToController("3", userVerify.getMAC(), userVerify.getSwitcher());
+//                    }
+//                };
+//                timer.schedule(task,60000);//延迟xx秒执行
                 return "登录成功";
             } else {
                 return "失败，未得到授权";
@@ -144,7 +147,7 @@ public class UserLoginController {
         return "false";
     }
 
-    public void sendMsgToController(String srcMac, String dstIP, String switcher,
+    public static void sendMsgToController(String srcMac, String dstIP, String switcher,
                                            String srcPort, String dstPort, String protocol) {
 
             String msgToController = String.format("{\"info\":\"1\", \"srcMac\":\"%s\", \"dstIP\":\"%s\", \"switcher\":\"%s\", " +
@@ -163,8 +166,9 @@ public class UserLoginController {
             socketClientTask.stop();
     }
 
-    public void sendMsgToController(String loginMac) {
-        String msgToController = String.format("{\"info\":\"2\", \"loginMac\":\"%s\"}", loginMac);
+    public static void sendMsgToController(String info, String loginMac, String switcher) {
+        String msgToController = String.format("{\"info\":\"%s\", \"loginMac\":\"%s\", \"switcher\":\"%s\"}",
+                info, loginMac, switcher);
         SocketClientTask socketClientTask = new SocketClientTask(msgToController, (o) -> {
 //                System.out.println("send ok");
         },

@@ -55,6 +55,7 @@ public abstract class PeriodicalTask extends AbstractStoppableTask{
         if(!isRunning.get()){
             if(oneTime) {
                 handle= scheduledPool.schedule(this, this.delay, TimeUnit.SECONDS);
+
             } else {
                 handle= scheduledPool.scheduleAtFixedRate(this,delay, this.interval,TimeUnit.SECONDS);
             }
