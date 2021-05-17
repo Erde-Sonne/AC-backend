@@ -21,6 +21,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static org.orlo.util.MySend.sendMsgToController;
+
 @RestController
 @RequestMapping("/user")
 public class UserLoginController {
@@ -38,7 +40,7 @@ public class UserLoginController {
         source2.setPolicy("学生,电子科技大学,4*securityLevel*,3of3,管理员,*time*14:00-24:00,2of3");
         AttrCheck source3 = new AttrCheck();
         source3.setPolicy("学生,电子科技大学,4*securityLevel*,3of3,管理员,*time*14:00-24:00,2of3");
-        for (int i = 1; i <= 12; i++) {
+        for (int i = 1; i <= 24; i++) {
             attrCheckMap.put("10.0.0." + i, source1);
         }
         attrCheckMap.put("internet", source3);
@@ -147,7 +149,7 @@ public class UserLoginController {
         return "false";
     }
 
-    public static void sendMsgToController(String srcMac, String dstIP, String switcher,
+/*    public static void sendMsgToController(String srcMac, String dstIP, String switcher,
                                            String srcPort, String dstPort, String protocol) {
 
             String msgToController = String.format("{\"info\":\"1\", \"srcMac\":\"%s\", \"dstIP\":\"%s\", \"switcher\":\"%s\", " +
@@ -180,5 +182,5 @@ public class UserLoginController {
             e.printStackTrace();
         }
         socketClientTask.stop();
-    }
+    }*/
 }

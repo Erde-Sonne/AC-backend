@@ -1,5 +1,6 @@
 package org.orlo.util;
 
+
 import java.time.Duration;
 
 public class MQDict {

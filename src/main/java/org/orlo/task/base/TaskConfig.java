@@ -19,12 +19,12 @@ public class TaskConfig {
         return scheduledPool;
     }
     //控制器
-    public static final String CONTROLLER_IP = "172.16.64.128";
+    public static final String CONTROLLER_IP = "127.0.0.1";
     public static final int CONTROLLER_PORT = 1060;
 
 
     //计算信任度的服务
-    public static final String LOF_IP = "127.0.0.1";
+    public static final String LOF_IP = "192.168.1.156";
     public static final int LOF_PORT = 1062;
 
 }

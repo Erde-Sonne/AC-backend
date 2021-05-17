@@ -11,6 +11,7 @@ import org.orlo.service.UserDataService;
 import org.orlo.service.UserFlowDataService;
 import org.orlo.task.KafkaListenerTask;
 import org.orlo.task.PeriodicalSocketClientTask;
+import org.orlo.task.SocketClientTask;
 import org.orlo.task.base.TaskConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -25,21 +26,23 @@ import java.util.concurrent.CopyOnWriteArraySet;
 @RequestMapping("/data")
 public class UserDataController {
 
+    private static volatile String msgConfidence = "";
     static {
         PeriodicalSocketClientTask.RequestGenerator requestGenerator = () -> {
-            String req = "default";
-            return req;
+            return  "default";
+//            System.out.println("**********");
         };
         PeriodicalSocketClientTask.ResponseHandler responseHandler = (String resp) -> {
             System.out.println(resp);
-            JSONObject jsonObject = JSON.parseObject(resp);
+            msgConfidence = resp;
+//            JSONObject jsonObject = JSON.parseObject(resp);
             SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             String format = df.format(new Date());
             System.out.println(format + "--------------------------------------------------------------------------------------------------");
 
         };
         //间隔20s向信任度计算服务器发出计算请求
- /*       PeriodicalSocketClientTask socketClientTask = new PeriodicalSocketClientTask(TaskConfig.LOF_IP,
+/*        PeriodicalSocketClientTask socketClientTask = new PeriodicalSocketClientTask(TaskConfig.LOF_IP,
                 TaskConfig.LOF_PORT, requestGenerator, responseHandler);
         socketClientTask.setDelay(1);
         socketClientTask.setInterval(20);
@@ -141,7 +144,7 @@ public class UserDataController {
             //如果当前请求的key集合中没有redis中的key,说明该访问资源流表已经失效，要清除redis中的key并且把数据存入mysql
            if (!currentKeys.contains(key)) {
                //首先，会发送消息到计算信任度服务器，
-
+//               sendMsgToLOF(key);
 
                List<String> lrange = jedis.lrange(key, 0, -1);
                if (lrange == null) {
@@ -162,7 +165,9 @@ public class UserDataController {
                }
                userFlowDataService.saveData(userFlowData);
                System.out.println(key + "已经储存到mysql数据库了" + "删除redis中的key");
-               jedis.del(key);
+               //key 5s后过期
+               jedis.expire(key, 5);
+//               jedis.del(key);
                //将key从set中移除
                redisKeys.remove(key);
            }
@@ -179,6 +184,21 @@ public class UserDataController {
         jedis.lpush("dynamicData", data);
         System.out.println(format + "--------------------------------------------------------------------------------------------------");
         System.out.println(data);
+    }
+
+    public static void sendMsgToLOF(String key) {
+//        String msg= String.format("{\"key\":\"%s\"}", key);
+        SocketClientTask socketClientTask = new SocketClientTask(key, (o) -> {
+//                System.out.println("send ok");
+        },
+                TaskConfig.LOF_IP, TaskConfig.LOF_PORT);
+        socketClientTask.start();
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        socketClientTask.stop();
     }
 
 }
