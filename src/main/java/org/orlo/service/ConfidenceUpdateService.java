@@ -4,44 +4,76 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.orlo.repository.UserVerifyRepository;
-import org.orlo.util.MySend;
+import org.orlo.util.MacAndIPUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 
+import java.util.Set;
+
 @Service
 public class ConfidenceUpdateService {
-    static Jedis jedis = new Jedis("127.0.0.1", 6379);
+    private static final Jedis jedis = new Jedis("127.0.0.1", 6379);
+    private static final double beta = 0.5;
+    private static final String DEFAULT_THRESHOLD = "0.0";
+    private static final String DEFAULT_CONFIDENCE = "5";
 
     @Autowired
     UserVerifyRepository userVerifyRepository;
-
+    @Autowired
+    IPConfidenceDataService ipConfidenceDataService;
 
     public void handleJson(String msg) {
+        jedis.select(1);
         JSONObject jsonObject = JSON.parseObject(msg);
-        JSONArray data = jsonObject.getJSONArray("data");
-        for(int i = 0; i < data.size(); i++) {
-            JSONObject dataJSONObject = data.getJSONObject(i);
-            String key = dataJSONObject.getString("key");
-            String value = dataJSONObject.getString("value");
-            String[] split = key.split(">");
+        Set<String> keys = jsonObject.keySet();
+        for(String key : keys) {
+            String[] split = key.split("-");
             String mac = split[0];
             String ip = split[1];
-            String threshold = jedis.hget(mac + "threshold", ip);
-            if(threshold == null) {
+            JSONArray array = jsonObject.getJSONArray(key);
+            double tmpSum = 0.0;
+            int size = array.size();
+            for(int i = 0; i < size; i++) {
+                tmpSum += array.getDouble(i);
+            }
+            double score = tmpSum / size;
+            String thresholdStr = jedis.hget("threshold", key);
+            if(thresholdStr == null) {
                 //从数据库取出threshold
-                jedis.hset(mac + "threshold", ip, "5");
-                threshold = "5";
+                jedis.hset("threshold", key, DEFAULT_THRESHOLD);
+                thresholdStr = DEFAULT_THRESHOLD;
             }
-            jedis.hset(mac + "confidence", ip, value);
-            if(Integer.parseInt(value) < Integer.parseInt(threshold)) {
-                System.out.println("error  confidence low");
-                MySend.sendMsgToController("4", key);
+            double threshold = Double.parseDouble(thresholdStr);
+            String confidenceStr = jedis.hget("confidence", key);
+            if(confidenceStr == null) {
+                confidenceStr = DEFAULT_CONFIDENCE;
+            }
+            double confidence = Double.parseDouble(confidenceStr);
+            System.out.println("score:" + score + "    threshold:" +threshold);
+            if(score > threshold) {
+                System.out.println("low");
+                confidence = confidence - beta * Math.abs(score - threshold);
             } else {
-                System.out.println("normal");
+                System.out.println("high");
+//                confidence = confidence + beta * Math.abs(score - threshold);
+                confidence = confidence + 0.1;
             }
+            jedis.hset("confidence", key, String.valueOf(confidence));
+            System.out.println(MacAndIPUtil.macToLong(mac));
+            System.out.println(MacAndIPUtil.ipToLong(ip));
+ /*           IPConfidenceData row = ipConfidenceDataService.getRow
+                    (MacAndIPUtil.macToLong(mac), MacAndIPUtil.ipToLong(ip));
+            if(row == null) {
+                System.out.println("add the new row to db");
+                IPConfidenceData confidenceData = new IPConfidenceData();
+                confidenceData.setMac(MacAndIPUtil.macToLong(mac)).setIp(MacAndIPUtil.ipToLong(ip)).
+                        setConfidence(confidence).setThreshold(threshold);
+                ipConfidenceDataService.addRow(confidenceData);
+            } else{
+                ipConfidenceDataService.updateRow(row);
+            }*/
+            System.out.println("confidence      key:" + key + "  confidence:" + confidence);
         }
-
-
     }
 }

@@ -7,17 +7,12 @@ import org.orlo.entity.UserVerify;
 import org.orlo.service.UserLoginService;
 import org.orlo.service.UserUnVerifyService;
 import org.orlo.service.UserVerifyService;
-import org.orlo.task.*;
-import org.orlo.task.base.TaskConfig;
-import org.orlo.util.Helper;
+import org.orlo.util.MD5Util;
+import org.orlo.util.RespBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import redis.clients.jedis.Jedis;
-
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -61,29 +56,29 @@ public class UserLoginController {
     @Autowired
     UserLoginService userLoginService;
     @PostMapping("/login")
-    public String userLogin(@RequestBody Map<String, String> params) {
-        String userName = params.get("username");
+    public RespBean userLogin(@RequestBody Map<String, String> params) {
+        String phone = params.get("username");
         String password = params.get("password");
-        UserUnVerify userUnVerify = userUnVerifyService.getUserByNameAndPassword(userName, password);
-        UserVerify userVerify = userVerifyService.getUserByNameAndPassword(userName, password);
+        System.out.println(phone);
+        System.out.println(password);
+        UserUnVerify userUnVerify = userUnVerifyService.getUserByPhone(Long.parseLong(phone));
+        UserVerify userVerify = userVerifyService.getUserByPhone(Long.parseLong(phone));
         if(userUnVerify == null && userVerify == null) {
-            return "用户名或者密码错误";
+            return RespBean.noUser();
         } else if(userUnVerify != null) {
-            return "当前用户正在审核中，请联系管理员";
+            return RespBean.verifyUser();
         } else {
-            AttrCheck Check = new AttrCheck();
-            Check.getUserAttr(userVerify);
-            Check.setPolicy("学生,电子科技大学,4*securityLevel*,3of3,管理员,*time*14:00-24:00,2of3");
-            boolean pass = Check.Check();
-            if(pass) {
-                UserLogin userLogin = new UserLogin();
-                userLogin.setUsername(userVerify.getUsername());
-                userLogin.setPassword(userVerify.getPassword());
-                userLogin.setMAC(userVerify.getMAC());
-                userLoginService.addRow(userLogin);
-                //将登录成功的Mac发送给onos
-                sendMsgToController("2", userVerify.getMAC(), userVerify.getSwitcher());
-                //一段时间后失效
+            if(!MD5Util.formPassToDBPass(password, "1a2b3c4d").equals(userVerify.getPassword())) {
+                return RespBean.passwdError();
+            }
+            UserLogin userLogin = new UserLogin();
+            userLogin.setUsername(userVerify.getUsername());
+            userLogin.setPassword(userVerify.getPassword());
+            userLogin.setMAC(userVerify.getMAC());
+            userLoginService.addRow(userLogin);
+            //将登录成功的Mac发送给onos
+            sendMsgToController("2", userVerify.getMAC(), userVerify.getSwitcher());
+            //一段时间后失效
 //                Timer timer=new Timer();
 //                TimerTask task=new TimerTask(){
 //                    public void run(){
@@ -91,15 +86,18 @@ public class UserLoginController {
 //                    }
 //                };
 //                timer.schedule(task,60000);//延迟xx秒执行
-                return "登录成功";
-            } else {
-                return "失败，未得到授权";
-            }
+            return RespBean.loginSuccess();
         }
     }
 
+
+/*    @PostMapping("/logout")
+    public RespBean userLogout(@RequestBody Map<String, String> params) {
+
+    }*/
+
     @PostMapping("/verifyByMac")
-    public String verifyUserByMac(@RequestParam Map<String, String> params) {
+    public RespBean verifyUserByMac(@RequestParam Map<String, String> params) {
         String srcMac = params.get("srcMac");
         String srcIP = params.get("srcIP");
         String dstIP = params.get("dstIP");
@@ -122,7 +120,7 @@ public class UserLoginController {
         }
         if (userByMacAndSwitcher == null) {
             System.out.println("没有该用户，要注册");
-            return "false";
+            return RespBean.noUser();
         }
         AttrCheck attrCheck = attrCheckMap.get(dstIP);
         if(attrCheck == null) {
@@ -131,22 +129,22 @@ public class UserLoginController {
             internet.getUserAttr(userByMacAndSwitcher);
             boolean pass = internet.Check();
             if (pass) {
-//                System.out.println("认证成功了哦");
+                System.out.println("认证成功了哦");
                 sendMsgToController(srcMac, dstIP, switcher, srcPort, dstPort, protocol);
-                return "success";
+                return RespBean.verifySuccess();
             }
             System.out.println("认证失败");
-            return "false";
+            return RespBean.noAuthorize();
         }
         attrCheck.getUserAttr(userByMacAndSwitcher);
         boolean pass = attrCheck.Check();
         if(pass) {
-//            System.out.println("认证成功了");
+            System.out.println("认证成功了");
             sendMsgToController(srcMac, dstIP, switcher, srcPort, dstPort, protocol);
-            return "success";
+            return RespBean.verifySuccess();
         }
         System.out.println("认证失败");
-        return "false";
+        return RespBean.noAuthorize();
     }
 
 /*    public static void sendMsgToController(String srcMac, String dstIP, String switcher,

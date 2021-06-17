@@ -2,17 +2,19 @@ package org.orlo.entity;
 
 
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 import javax.persistence.*;
 
-@Entity()
+@Entity(name = "ipconfidence_data")
 @Data
+@IdClass(IPConfidenceUPK.class)
+@Accessors(chain = true)
 public class IPConfidenceData {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private  int id;
-    private String ip;
-    private String mac;
-    private String confidence;
-    private String threshold;
+    private long mac;
+    @Id
+    private long ip;
+    private double confidence;
+    private double threshold;
 }

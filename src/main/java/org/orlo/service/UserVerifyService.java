@@ -5,19 +5,24 @@ import org.orlo.repository.UserVerifyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class UserVerifyService {
     @Autowired
     UserVerifyRepository userVerifyRepository;
 
-    public UserVerify getUserByNameAndPassword(String userName, String password) {
-        return userVerifyRepository.getUserByNameAndPassword(userName, password);
+    public UserVerify getUserByPhone(long phone) {
+        return userVerifyRepository.getUserVerifyByPhone(phone);
     }
 
     public UserVerify getUserByMacAndSwitcher(String mac, String switcher) {
         return userVerifyRepository.getUserByMacAndSwitcher(mac, switcher);
     }
 
+    public List<UserVerify> getAll() {
+        return userVerifyRepository.findAll();
+    }
     public void addUserVerify(UserVerify user) {
         userVerifyRepository.save(user);
     }

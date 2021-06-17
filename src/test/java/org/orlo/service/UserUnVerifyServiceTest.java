@@ -18,8 +18,10 @@ public class UserUnVerifyServiceTest {
     public void addUnVerifyUser() {
         for(int i = 0; i < 10; i++) {
             UserUnVerify userUnVerify = new UserUnVerify();
+            userUnVerify.setPhone(18848497700L + i);
             userUnVerify.setUsername("A" + i);
-            userUnVerify.setPassword("123456");
+            userUnVerify.setPassword("0bdf980dd885bf2402579a154da4591b");
+            userUnVerify.setSalt("1a2b3c4d");
             userUnVerify.setDepartment("电子科技大学");
             userUnVerify.setType("学生" + i);
             userUnVerify.setDevice("手机" + i);
@@ -37,7 +39,7 @@ public class UserUnVerifyServiceTest {
     public void deleteUnVerifyUser() {
         String username = "A1";
         String password = "123456";
-        UserUnVerify toBedeleteuser = unVerifyService.getUserByNameAndPassword(username, password);
+        UserUnVerify toBedeleteuser = unVerifyService.getUserByPhone(Long.parseLong(username));
         System.out.println(toBedeleteuser);
         unVerifyService.removeUnVerifyUser(toBedeleteuser);
     }

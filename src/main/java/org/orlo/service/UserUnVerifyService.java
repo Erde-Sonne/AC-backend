@@ -11,8 +11,8 @@ import java.util.List;
 public class UserUnVerifyService {
     @Autowired
     UserUnVerifyRepository userUnVerifyRepository;
-    public UserUnVerify getUserByNameAndPassword(String userName, String password) {
-        return userUnVerifyRepository.getUserByNameAndPassword(userName, password);
+    public UserUnVerify getUserByPhone(long phone) {
+        return userUnVerifyRepository.getUserUnVerifyByPhone(phone);
     }
 
     public void addRow(UserUnVerify user) {

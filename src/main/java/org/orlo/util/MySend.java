@@ -22,8 +22,6 @@ public class MySend {
     }
 
 
-
-
     public static void sendMsgToController(String info, String loginMac, String switcher) {
         String msgToController = String.format("{\"info\":\"%s\", \"loginMac\":\"%s\", \"switcher\":\"%s\"}",
                 info, loginMac, switcher);
@@ -50,6 +48,22 @@ public class MySend {
 //                System.out.println("send ok");
         },
                 TaskConfig.CONTROLLER_IP, TaskConfig.CONTROLLER_PORT);
+        socketClientTask.start();
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        socketClientTask.stop();
+    }
+
+
+    public static void sendMsgToLOF(String key) {
+//        String msg= String.format("{\"key\":\"%s\"}", key);
+        SocketClientTask socketClientTask = new SocketClientTask(key, (o) -> {
+//                System.out.println("send ok");
+        },
+                TaskConfig.LOF_IP, TaskConfig.LOF_PORT);
         socketClientTask.start();
         try {
             Thread.sleep(100);

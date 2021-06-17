@@ -19,7 +19,7 @@ public class UserLoginService {
         userLoginRepository.save(user);
     }
 
-    public void removeUnVerifyUser(UserLogin user) {
+    public void removeRow(UserLogin user) {
         userLoginRepository.delete(user);
     }
 

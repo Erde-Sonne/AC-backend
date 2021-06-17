@@ -8,9 +8,10 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 
 @CrossOrigin
 @RepositoryRestResource(path = "verify")
-public interface UserVerifyRepository extends JpaRepository<UserVerify, Integer> {
-    @Query(value = "select u from user_verify u where u.username = ?1 and u.password = ?2")
-    UserVerify getUserByNameAndPassword (String userName, String password) ;
+public interface UserVerifyRepository extends JpaRepository<UserVerify, Long> {
+
+    UserVerify getUserVerifyByPhone(long phone);
+
     @Query(value = "select u from user_verify u where u.MAC = ?1 and u.switcher = ?2")
     UserVerify getUserByMacAndSwitcher (String mac, String switcher) ;
 }

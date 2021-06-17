@@ -11,10 +11,10 @@ import javax.persistence.Id;
 @Data
 public class UserVerify {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private  int id;
+    private long phone;
     private  String username;
     private  String password;
+    private String salt;
     private  String safe;
     private  String device;
     private  String time;

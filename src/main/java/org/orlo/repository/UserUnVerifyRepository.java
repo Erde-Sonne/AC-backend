@@ -9,9 +9,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 
 @CrossOrigin
 @RepositoryRestResource(path = "unverify")
-public interface UserUnVerifyRepository extends JpaRepository<UserUnVerify, Integer> {
-    @Query(value = "select u from user_unverify u where u.username = ?1 and u.password = ?2")
-    UserUnVerify getUserByNameAndPassword (String userName, String password);
+public interface UserUnVerifyRepository extends JpaRepository<UserUnVerify, Long> {
 
-
+    UserUnVerify getUserUnVerifyByPhone(long phone);
 }
