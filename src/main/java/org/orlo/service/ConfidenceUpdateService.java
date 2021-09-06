@@ -15,7 +15,7 @@ import java.util.Set;
 public class ConfidenceUpdateService {
     private static final Jedis jedis = new Jedis("127.0.0.1", 6379);
     private static final double beta = 0.5;
-    private static final String DEFAULT_THRESHOLD = "0.0";
+    private static final String DEFAULT_THRESHOLD = "0.2";
     private static final String DEFAULT_CONFIDENCE = "5";
 
     @Autowired
@@ -52,16 +52,16 @@ public class ConfidenceUpdateService {
             double confidence = Double.parseDouble(confidenceStr);
             System.out.println("score:" + score + "    threshold:" +threshold);
             if(score > threshold) {
-                System.out.println("low");
+                System.out.println("数据异常！！！");
                 confidence = confidence - beta * Math.abs(score - threshold);
             } else {
-                System.out.println("high");
-//                confidence = confidence + beta * Math.abs(score - threshold);
-                confidence = confidence + 0.1;
+                System.out.println("数据正常！！！");
+                confidence = confidence + beta * Math.abs(score - threshold);
+//                confidence = confidence + 0.1;
             }
             jedis.hset("confidence", key, String.valueOf(confidence));
-            System.out.println(MacAndIPUtil.macToLong(mac));
-            System.out.println(MacAndIPUtil.ipToLong(ip));
+//            System.out.println(MacAndIPUtil.macToLong(mac));
+//            System.out.println(MacAndIPUtil.ipToLong(ip));
  /*           IPConfidenceData row = ipConfidenceDataService.getRow
                     (MacAndIPUtil.macToLong(mac), MacAndIPUtil.ipToLong(ip));
             if(row == null) {
@@ -73,7 +73,7 @@ public class ConfidenceUpdateService {
             } else{
                 ipConfidenceDataService.updateRow(row);
             }*/
-            System.out.println("confidence      key:" + key + "  confidence:" + confidence);
+            System.out.println("用户到资源键:" + key + "  信任度值:" + confidence);
         }
     }
 }
