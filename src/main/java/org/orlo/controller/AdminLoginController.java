@@ -1,9 +1,15 @@
 package org.orlo.controller;
 
 
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.IncorrectCredentialsException;
+import org.apache.shiro.authc.UnknownAccountException;
+import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.subject.Subject;
 import org.orlo.entity.AdminUser;
 import org.orlo.service.AdminUserService;
 import org.orlo.util.MD5Util;
+import org.orlo.util.RespBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,6 +26,23 @@ public class AdminLoginController {
     AdminUserService adminUserService;
 
     @PostMapping("/login")
+    public RespBean login(@RequestBody Map<String, String> params) {
+        String phone = params.get("username");
+        String password = params.get("password");
+        Subject subject = SecurityUtils.getSubject();
+        UsernamePasswordToken token = new UsernamePasswordToken(phone, password);
+        try {
+            subject.login(token);
+        } catch (UnknownAccountException e) {
+            return RespBean.noUser();
+        } catch (IncorrectCredentialsException e) {
+            return RespBean.passwdError();
+        }
+        return RespBean.loginSuccess();
+    }
+
+
+    @PostMapping("/loginOld")
     public String userLogin(@RequestBody Map<String, String> params) {
         String phone = params.get("username");
         String password = params.get("password");

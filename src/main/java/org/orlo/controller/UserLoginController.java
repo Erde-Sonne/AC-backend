@@ -1,5 +1,10 @@
 package org.orlo.controller;
 
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.IncorrectCredentialsException;
+import org.apache.shiro.authc.UnknownAccountException;
+import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.subject.Subject;
 import org.orlo.attrTree.AttrCheck;
 import org.orlo.entity.UserLogin;
 import org.orlo.entity.UserUnVerify;
@@ -30,13 +35,16 @@ public class UserLoginController {
     ReentrantLock reentrantLock = new ReentrantLock();
     static {
         AttrCheck source1 = new AttrCheck();
-        source1.setPolicy("学生,电子科技大学,4*securityLevel*,3of3,管理员,*time*14:00-24:00,2of3");
+        source1.setPolicy("中尉,情报部,4*securityLevel*,3of3,管理员,*time*14:00-24:00,2of3");
         AttrCheck source2 = new AttrCheck();
-        source2.setPolicy("学生,电子科技大学,4*securityLevel*,3of3,管理员,*time*14:00-24:00,2of3");
+        source2.setPolicy("中尉,作战部,4*securityLevel*,3of3,管理员,*time*14:00-24:00,2of3");
         AttrCheck source3 = new AttrCheck();
-        source3.setPolicy("学生,电子科技大学,4*securityLevel*,3of3,管理员,*time*14:00-24:00,2of3");
-        for (int i = 1; i <= 24; i++) {
+        source3.setPolicy("中尉,情报部,4*securityLevel*,3of3,管理员,*time*14:00-24:00,2of3");
+        for (int i = 1; i <= 10; i++) {
             attrCheckMap.put("10.0.0." + i, source1);
+        }
+        for (int i = 11; i <= 24; i++) {
+            attrCheckMap.put("10.0.0." + i, source2);
         }
         attrCheckMap.put("internet", source3);
       /*  KafkaListenerTask kafkaListenerTask = new KafkaListenerTask(blockingQueueA, blockingQueueC, blockingQueueD);
@@ -55,6 +63,7 @@ public class UserLoginController {
     UserVerifyService userVerifyService;
     @Autowired
     UserLoginService userLoginService;
+
     @PostMapping("/login")
     public RespBean userLogin(@RequestBody Map<String, String> params) {
         String phone = params.get("username");
@@ -78,6 +87,7 @@ public class UserLoginController {
             userLoginService.addRow(userLogin);
             //将登录成功的Mac发送给onos
             sendMsgToController("2", userVerify.getMAC(), userVerify.getSwitcher());
+            System.out.println(userVerify.toString());
             //一段时间后失效
 //                Timer timer=new Timer();
 //                TimerTask task=new TimerTask(){

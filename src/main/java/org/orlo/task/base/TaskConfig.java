@@ -24,7 +24,7 @@ public class TaskConfig {
 
 
     //计算信任度的服务
-    public static final String LOF_IP = "192.168.1.156";
+    public static final String LOF_IP = "192.168.1.49";
     public static final int LOF_PORT = 1062;
 
 }

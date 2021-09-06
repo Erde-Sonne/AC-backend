@@ -2,8 +2,10 @@ package org.orlo.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.orlo.entity.Policy;
 import org.orlo.entity.UserUnVerify;
 import org.orlo.entity.UserVerify;
+import org.orlo.service.PolicyService;
 import org.orlo.service.UserUnVerifyService;
 import org.orlo.service.UserVerifyService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +21,8 @@ public class UserVerifyController {
     UserUnVerifyService userUnVerifyService;
     @Autowired
     UserVerifyService userVerifyService;
+    @Autowired
+    PolicyService policyService;
 
     @GetMapping("/getAllUnVerifyUser")
     public List<UserUnVerify> getUnVerifyUser() {
@@ -74,5 +78,28 @@ public class UserVerifyController {
         UserVerify toBedeleteuser = userVerifyService.getUserByPhone(Long.parseLong(phone));
         userVerifyService.removeUserVerify(toBedeleteuser);
         return "成功移除";
+    }
+
+    @PostMapping("/setPolicy")
+    public String setPolicy(@RequestBody Map<String,String> params){
+        Policy policy = new Policy();
+        String policyString = params.get("policyString");
+        policyString = policyString.substring(0,policyString.length() - 1);
+        policy.setPolicycol(policyString);
+        policy.setDstIP(params.get("IpAddr"));
+        policyService.setPolicy(policy);
+        return "success";
+    }
+
+    @PostMapping("/deletePolicy")
+    public String deletePolicy(@RequestBody Map<String, String> params){
+        policyService.deletePolicyByIP(params.get("IpAddr"));
+        return "success";
+    }
+
+    @PostMapping("/updatePolicy")
+    public String updatePolicy(@RequestBody Map<String, String> params){
+        policyService.updatePolicy(params.get("policyStr"), params.get("IpAddr"));
+        return "success";
     }
 }

@@ -45,23 +45,25 @@ public class PeriodTaskService {
         jedis.select(1);
         Set<String> forbiddenSet = new HashSet<>();
         Timer timer = new Timer();
-/*        timer.schedule(new TimerTask() {
+        timer.schedule(new TimerTask() {
             public void run() {
                 Map<String, String> confidences = jedis.hgetAll("confidence");
                 for(String key : confidences.keySet()) {
                     String value = confidences.get(key);
-                    if(Float.parseFloat(value) < 4.8 && !forbiddenSet.contains(key)) {
+                    if(Float.parseFloat(value) < 4.1 && !forbiddenSet.contains(key)) {
                         forbiddenSet.add(key);
+                        System.out.println("信任度太低，访问此资源的权限不足，访问的连接将被断掉！！！");
+                        System.out.println("请联系管理员更新信任值........");
                         MySend.sendMsgToController("4", key);
                     }
                 }
             }
-        }, 1000, 1000);// 设定指定的时间time,此处为2000毫秒*/
-        timer.schedule(new TimerTask() {
+        }, 1000, 10000);// 设定指定的时间time,此处为2000毫秒
+       /* timer.schedule(new TimerTask() {
             public void run() {
                 MySend.sendMsgToController("4", "8C:16:45:85:20:60-202.115.22.251");
                 System.out.println("!!!!!!!!!!!!!!!!");
             }
-        }, 1000, 10000);// 设定指定的时间time,此处为2000毫秒
+        }, 1000, 10000);// 设定指定的时间time,此处为2000毫秒*/
     }
 }
