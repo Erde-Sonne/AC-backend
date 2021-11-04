@@ -8,6 +8,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import redis.clients.jedis.Jedis;
 
+import java.util.Calendar;
+import java.util.Date;
+
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class Test {
@@ -47,10 +50,9 @@ public class Test {
 
     @org.junit.Test
     public void Test2() {
-        Jedis jedis = new Jedis("127.0.0.1", 6379);
-        jedis.select(1);
-        System.out.println(jedis.keys("*"));
-        jedis.select(0);
-        System.out.println(jedis.keys("*"));
+        Calendar calendar = Calendar.getInstance();
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        int minute = calendar.get(Calendar.MINUTE);
+        System.out.println(hour + ":" + minute);
     }
 }

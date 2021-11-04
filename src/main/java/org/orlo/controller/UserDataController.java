@@ -34,6 +34,8 @@ public class UserDataController {
     @Autowired
     UserFlowDataService userFlowDataService;
 
+    static String REDISHOST = TaskConfig.REDIS_IP;
+
     @PostMapping("/check")
     public UserData checkUser(@RequestBody Map<String, String> params){
         String username = params.get("username");
@@ -49,14 +51,14 @@ public class UserDataController {
 
     @PostMapping("/postData")
     public void postData(@RequestParam Map<String, String> params) {
-        Jedis jedis = new Jedis("127.0.0.1", 6379);
+        Jedis jedis = new Jedis(REDISHOST, 6379);
         jedis.select(1);
         String data = params.get("data");
 //        System.out.println(data);
         JSONObject jsonObject = JSON.parseObject(data);
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String format = df.format(new Date());
-        System.out.println(format + "--------------------------------------------------------------------------------------------------");
+//        System.out.println(format + "--------------------------------------------------------------------------------------------------");
         //每一次上传数据时，将key存为一个set
         HashSet<String> currentKeys = new HashSet<>();
         for(int i = 0; i < 25; i++) {
@@ -78,26 +80,28 @@ public class UserDataController {
                 Long packets = oneData.getLong("packets");
                 Long bytes = oneData.getLong("bytes");
                 Long life = oneData.getLong("life");
-                Long maxflow = 0L;
+                double maxflow = 0L;
+                double avgflow = 0L;
                 String key = "";
                 if (!srcIP.equals("")) {
                     key = srcIP + ">" + dstMAC;
                 } else if(!srcMAC.equals("")) {
                     key = srcMAC + ">" + dstIP;
                 }
-                String preData = jedis.lindex(key, -1);
+                String preData = jedis.get(key);
                 //取出前一条数据
                 if (preData != null) {
                     JSONObject preJson = JSONObject.parseObject(preData);
                     Long preBytes = preJson.getLong("bytes");
-                    maxflow = (bytes - preBytes) / 20;
+                    avgflow = Math.abs(bytes - preBytes) / 10.0;
                     Long preMaxflow = preJson.getLong("maxflow");
-                    maxflow = Math.max(maxflow, preMaxflow);
+                    maxflow = Math.max(avgflow, preMaxflow);
                 } else {
                     //该流第一条数据
-                    maxflow = bytes / 20;
+                    avgflow = bytes / 10.0;
+                    maxflow = avgflow;
                 }
-                handlePerFlowData(jedis, key, time, packets, bytes, life, maxflow, srcPort, dstPort, protocol);
+                handlePerFlowData(jedis, key, time, packets, bytes, life, avgflow, maxflow, srcPort, dstPort, protocol);
                 JSONObject tmp = new JSONObject();
                 tmp.put("time",time);
                 tmp.put("packets",packets);
@@ -107,8 +111,9 @@ public class UserDataController {
                 tmp.put("srcPort",srcPort);
                 tmp.put("dstPort",dstPort);
                 tmp.put("protocol",protocol);
-                jedis.lpush(key,tmp.toJSONString());
-                System.out.println( "key:" + key + "  -->" + tmp.toJSONString());
+                tmp.put("avgflow", avgflow);
+                jedis.set(key,tmp.toJSONString());
+//                System.out.println( "key:" + key + "  -->" + tmp.toJSONString());
                 currentKeys.add(key);
             }
         }
@@ -123,29 +128,8 @@ public class UserDataController {
             if (!currentKeys.contains(key)) {
                 //首先，会发送消息到计算信任度服务器，
 //               MySend.sendMsgToLOF("save," + key);
-
-                List<String> lrange = jedis.lrange(key, 0, -1);
-                if (lrange == null || lrange.size() == 0) {
-                    return;
-                }
-                String startData = lrange.get(0);
-                JSONObject parseObject = JSONObject.parseObject(startData);
-                String time = parseObject.getString("time");
-                UserFlowData userFlowData = new UserFlowData();
-                userFlowData.setKeyValue(key);
-                userFlowData.setStartTime(time);
-                ObjectMapper mapper = new ObjectMapper();
-                try {
-                    String jsonData = mapper.writeValueAsString(lrange);
-                    userFlowData.setJsonData(jsonData);
-                } catch (JsonProcessingException e) {
-                    e.printStackTrace();
-                }
-                userFlowDataService.saveData(userFlowData);
-                System.out.println(key + "已经储存到mysql数据库了" + "删除redis中的key");
-                //key 5s后过期
-                jedis.expire(key, 5);
-//               jedis.del(key);
+//                System.out.println("删除redis中的key:" + key);
+                jedis.del(key);
             }
         }
 
@@ -154,21 +138,52 @@ public class UserDataController {
             if(currentKeys.contains(key)) {
                 continue;
             }
-            jedis.del(key);
+            jedis.expire(key, 3);
+        }
+
+        jedis.select(10);
+        for(String key : jedis.keys("*")) {
+            if(currentKeys.contains(key)) {
+                continue;
+            }
+            jedis.expire(key, 3);
         }
     }
 
     @PostMapping("/postDynamicData")
     public void postDynamicData(@RequestParam Map<String, String> params) {
-        Jedis jedis = new Jedis("127.0.0.1", 6379);
+        Jedis jedis = new Jedis(REDISHOST, 6379);
         jedis.select(2);
         String data = params.get("data");
-        JSONObject jsonObject = JSON.parseObject(data);
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String format = df.format(new Date());
-        jedis.lpush("dynamicData", data);
-        System.out.println(format + "--------------------------------------------------------------------------------------------------");
-        System.out.println(data);
+        jedis.set("dynamicData", data);
+//        System.out.println(format + "--------------------------------------------------------------------------------------------------");
+//        System.out.println(data);
+        handleDynamic(jedis, data);
+    }
+
+    /**
+     * 处理交换机动态数据，为了界面的显示
+     * @param data
+     */
+    private void handleDynamic(Jedis jedis, String data) {
+        JSONObject jsonObject = JSON.parseObject(data);
+        Set<String> keys = jsonObject.keySet();
+        JSONObject showJson = new JSONObject();
+        for(String key : keys) {
+            JSONArray jsonArray = jsonObject.getJSONArray(key);
+            JSONObject tmp = new JSONObject();
+            tmp.put("averagepkts", jsonArray.getLong(0));
+            tmp.put("maxpkts", jsonArray.getLong(1));
+            tmp.put("averagebytes", jsonArray.getLong(2));
+            tmp.put("maxbytes", jsonArray.getLong(3));
+            tmp.put("totalbytes", jsonArray.getLong(4));
+            tmp.put("totalflownums", jsonArray.getLong(5));
+            tmp.put("totalflowrate", jsonArray.getLong(6));
+            showJson.put(key, tmp.toJSONString());
+        }
+        jedis.set("dynamicDataShow", showJson.toJSONString());
     }
 
 
@@ -184,7 +199,7 @@ public class UserDataController {
      * @param protocol
      */
     private void handlePerFlowData(Jedis jedis, String key, long time, long packets, long bytes, long life,
-                                   long maxflow, String srcPort, String dstPort, String protocol) {
+                                   double avgflow, double maxflow, String srcPort, String dstPort, String protocol) {
         jedis.select(3);
         if(!jedis.exists(key)) {
             //设置过期时间为1天
@@ -199,12 +214,11 @@ public class UserDataController {
             jedis.select(3);
             jedis.set(key, String.valueOf(visitCnt));
         }
-        double averageFlowRate = bytes * 1.0 / life;
         JSONObject data = new JSONObject();
         data.put("visitCnt", visitCnt);
         data.put("srcPort",srcPort);
         data.put("dstPort",dstPort);
-        data.put("averageFlowRate", averageFlowRate);
+        data.put("averageFlowRate", avgflow);
         data.put("maxflow",maxflow);
         data.put("time",time);
         data.put("life",life);
@@ -212,6 +226,31 @@ public class UserDataController {
         jedis.select(9);
         //存储数据
         jedis.set(key, data.toJSONString());
+        jedis.select(10);
+        //存储数据
+        jedis.lpush(key, data.toJSONString());
         jedis.select(1);
+    }
+
+
+    @PostMapping("/path")
+    public void path(@RequestParam Map<String, String> params) {
+        Jedis jedis = new Jedis(REDISHOST, 6379);
+        jedis.select(8);
+        String macAddress = params.get("macAddress");
+        String path = params.get("path");
+        //去掉首尾的[]
+        path = path.substring(1, path.length() - 1);
+        String safeRoute = params.get("safeRoute");
+        String costTime = params.get("costTime");
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("path", path);
+        jsonObject.put("safeRoute", safeRoute);
+        jsonObject.put("costTime", costTime);
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String format = df.format(new Date());
+        jedis.set(macAddress, jsonObject.toJSONString());
+//        System.out.println(format + "--------------------------------------------------------------------------------------------------");
+//        System.out.println(params);
     }
 }

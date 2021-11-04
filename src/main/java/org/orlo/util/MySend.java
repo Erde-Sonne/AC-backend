@@ -39,11 +39,11 @@ public class MySend {
     }
 
     public static void sendMsgToController(String srcMac, String dstIP, String switcher,
-                                           String srcPort, String dstPort, String protocol) {
+                                           String srcPort, String dstPort, String protocol, String beginTime, String safeRoute) {
 
         String msgToController = String.format("{\"info\":\"1\", \"srcMac\":\"%s\", \"dstIP\":\"%s\", \"switcher\":\"%s\", " +
-                        "\"srcPort\":\"%s\", \"dstPort\":\"%s\", \"protocol\":\"%s\"}",
-                srcMac, dstIP, switcher, srcPort, dstPort, protocol);
+                        "\"srcPort\":\"%s\", \"dstPort\":\"%s\", \"protocol\":\"%s\", \"beginTime\":\"%s\", \"safeRoute\":\"%s\"}",
+                srcMac, dstIP, switcher, srcPort, dstPort, protocol, beginTime, safeRoute);
         SocketClientTask socketClientTask = new SocketClientTask(msgToController, (o) -> {
 //                System.out.println("send ok");
         },

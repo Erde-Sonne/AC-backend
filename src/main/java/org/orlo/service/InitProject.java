@@ -14,5 +14,6 @@ public class InitProject implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
 //        periodTaskService.runLOF();
 //        periodTaskService.checkConfidence();
+        periodTaskService.handleLink();
     }
 }

@@ -9,9 +9,9 @@ public class AttrCheck {
 
     public void getUserAttr(UserVerify usr){
         String Attrs = usr.getDevice()+","
-                +  usr.getDepartment()+",*time*"
-                +  usr.getTime()+","
-                +  usr.getSafe()+"*securityLevel*,"
+                +  usr.getDepartment()+",访问时段："
+                +  usr.getTime()+",安全级别："
+                +  usr.getSafe()+","
                 +  usr.getType()+","
                 +  usr.getIp()+","
                 +  usr.getMAC()+","

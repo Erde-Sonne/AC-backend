@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.orlo.repository.UserVerifyRepository;
+import org.orlo.task.base.TaskConfig;
 import org.orlo.util.MacAndIPUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,7 +14,7 @@ import java.util.Set;
 
 @Service
 public class ConfidenceUpdateService {
-    private static final Jedis jedis = new Jedis("127.0.0.1", 6379);
+    private static final Jedis jedis = new Jedis(TaskConfig.REDIS_IP, 6379);
     private static final double beta = 0.5;
     private static final String DEFAULT_THRESHOLD = "0.2";
     private static final String DEFAULT_CONFIDENCE = "5";
@@ -24,7 +25,7 @@ public class ConfidenceUpdateService {
     IPConfidenceDataService ipConfidenceDataService;
 
     public void handleJson(String msg) {
-        jedis.select(1);
+        jedis.select(5);
         JSONObject jsonObject = JSON.parseObject(msg);
         Set<String> keys = jsonObject.keySet();
         for(String key : keys) {

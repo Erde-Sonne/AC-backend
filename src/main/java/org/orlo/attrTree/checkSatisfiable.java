@@ -10,14 +10,14 @@ public class checkSatisfiable {
         if (p.children == null || p.children.length == 0) {   //如果是叶子节点，匹配存在的属性
             for (i = 0; i < Attrs.length; i++) {   //在属性集的范围内
                 prvAttr = Attrs[i];   //获取属性
-                if(prvAttr.contains("*securityLevel*") && p.attr.contains("*securityLevel*")){
-                    userLevel = Integer.parseInt(prvAttr.substring(0,1));
-                    requireLevel = Integer.parseInt(p.attr.substring(0,1));
+                if(prvAttr.contains("安全级别：") && p.attr.contains("安全级别：")){
+                    userLevel = Integer.parseInt(prvAttr.substring(5));
+                    requireLevel = Integer.parseInt(p.attr.substring(5));
                     if(userLevel >= requireLevel){
                         p.satisfiable = true;
                         break;
                     }
-                }else if(prvAttr.contains("*time*") && p.attr.contains("*time*")){
+                }else if(prvAttr.contains("访问时段：") && p.attr.contains("访问时段：")){
                     timeCheck check = new timeCheck();
                     if(check.checkTime(prvAttr, p.attr)){
                         p.satisfiable = true;
