@@ -73,8 +73,8 @@ public class PeriodTaskService {
                 System.out.println("!!!!!!!!!!!!!!!!");
             }
         }, 1000, 10000);// 设定指定的时间time,此处为2000毫秒*/
-    }
 
+    }
 
     public void handleLink() {
         Timer timer = new Timer();

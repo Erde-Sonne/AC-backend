@@ -24,6 +24,7 @@ public class UserLogoutController {
     UserVerifyService userVerifyService;
     @Autowired
     UserLoginService userLoginService;
+
     @PostMapping("/logout")
     public RespBean userLogout(@RequestBody Map<String, String> params) {
         String phone = params.get("phone");

@@ -33,5 +33,4 @@ public class UserVerifyServiceTest {
         userVerifyService.addUserVerify(userVerify);
 
     }
-
 }
