@@ -16,8 +16,8 @@ import java.util.Set;
 public class ConfidenceUpdateService {
     private static final Jedis jedis = new Jedis(TaskConfig.REDIS_IP, 6379);
     private static final double beta = 0.5;
-    private static final String DEFAULT_THRESHOLD = "0.2";
-    private static final String DEFAULT_CONFIDENCE = "5";
+    private static final String DEFAULT_THRESHOLD = "0.4";
+    private static final String DEFAULT_CONFIDENCE = "80";
 
     @Autowired
     UserVerifyRepository userVerifyRepository;

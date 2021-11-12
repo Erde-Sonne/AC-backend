@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/administrator")
@@ -54,18 +55,30 @@ public class UserVerifyController {
     public String updateVerifyUser(@RequestBody Map<String, String> params) {
         String phone = params.get("phone");
         String password = params.get("password");
-        System.out.println("******username:" + phone + "*****password:" + password);
+        String mac = params.get("mac");
+        String switcher = params.get("switcher");
+//        System.out.println("******username:" + phone + "*****password:" + password);
         UserVerify userToBeUpdate = userVerifyService.getUserByPhone(Long.parseLong(phone));
         userToBeUpdate.setType(params.get("type"));
         userToBeUpdate.setTime(params.get("time"));
-        userToBeUpdate.setSwitcher(params.get("switcher"));
+        userToBeUpdate.setSwitcher(switcher);
         userToBeUpdate.setSafe(params.get("safe"));
         userToBeUpdate.setPort(params.get("port"));
-        userToBeUpdate.setMAC(params.get("mac"));
+        userToBeUpdate.setMAC(mac);
         userToBeUpdate.setIp(params.get("ip"));
         userToBeUpdate.setDevice(params.get("device"));
         userToBeUpdate.setDepartment(params.get("department"));
         userVerifyService.updateUserVerify(userToBeUpdate);
+        Set<String> userKeys = UserLoginController.userKeys;
+        Map<String, UserVerify> userVerifyCache = UserLoginController.userVerifyCache;
+        mac = mac.toUpperCase();
+        String key = mac + "&" + switcher;
+        if (userKeys.contains(key)) {
+            UserVerify userByMacAndSwitcher = userVerifyService.getUserByMacAndSwitcher(mac, switcher);
+            if (userByMacAndSwitcher != null) {
+                userVerifyCache.put(key, userByMacAndSwitcher);
+            }
+        }
         return "成功更改";
     }
 

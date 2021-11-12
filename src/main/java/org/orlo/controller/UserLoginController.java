@@ -90,11 +90,11 @@ public class UserLoginController {
             userLogin.setUsername(userVerify.getUsername());
             userLogin.setPassword(userVerify.getPassword());
             userLogin.setMAC(userVerify.getMAC());
-            safeRouteMap.put(userVerify.getMAC().toUpperCase(), safeRoute);
+//            safeRouteMap.put(userVerify.getMAC().toUpperCase(), safeRoute);
             userLoginService.addRow(userLogin);
             //将登录成功的Mac发送给onos
             sendMsgToController("2", userVerify.getMAC(), userVerify.getSwitcher());
-            System.out.println(safeRouteMap.toString());
+//            System.out.println(safeRouteMap.toString());
             System.out.println(userVerify.toString());
             //一段时间后失效
 //                Timer timer=new Timer();
@@ -142,6 +142,7 @@ public class UserLoginController {
         String protocol = params.get("protocol");
         String beginTime = params.get("beginTime");
         System.out.println(params.toString());
+        srcMac = srcMac.toUpperCase();
         String key = srcMac + "&" + switcher;
         UserVerify userByMacAndSwitcher = null;
         if (userKeys.contains(key)) {
@@ -195,11 +196,11 @@ public class UserLoginController {
         boolean pass = attrCheck.Check();
         if(pass) {
             System.out.println("认证成功了");
-            String safeRouting = "0";
-            String tmp = safeRouteMap.getOrDefault(srcMac, "false");
-            if("true".equals(tmp)) {
-                safeRouting = "1";
-            }
+            String safeRouting = "1";
+//            String tmp = safeRouteMap.getOrDefault(srcMac, "false");
+//            if("true".equals(tmp)) {
+//                safeRouting = "1";
+//            }
             sendMsgToController(srcMac, dstIP, switcher, srcPort, dstPort, protocol, beginTime, safeRouting);
             return RespBean.verifySuccess();
         }

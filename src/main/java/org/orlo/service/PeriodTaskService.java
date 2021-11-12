@@ -15,8 +15,6 @@ import java.util.*;
 
 @Component
 public class PeriodTaskService {
-    private static final Jedis jedis = new Jedis(TaskConfig.REDIS_IP, 6379);
-
     @Autowired
     ConfidenceUpdateService confidenceUpdateService;
 
@@ -39,12 +37,13 @@ public class PeriodTaskService {
         PeriodicalSocketClientTask socketClientTask = new PeriodicalSocketClientTask(TaskConfig.LOF_IP,
                 TaskConfig.LOF_PORT, requestGenerator, responseHandler);
         socketClientTask.setDelay(1);
-        socketClientTask.setInterval(20);
+        socketClientTask.setInterval(10);
         socketClientTask.start();
     }
 
 
     public void checkConfidence() {
+        Jedis jedis = new Jedis(TaskConfig.REDIS_IP, 6379);
         jedis.select(5);
         Set<String> forbiddenSet = new HashSet<>();
         Timer timer = new Timer();
@@ -53,7 +52,7 @@ public class PeriodTaskService {
                 Map<String, String> confidences = jedis.hgetAll("confidence");
                 for(String key : confidences.keySet()) {
                     String value = confidences.get(key);
-                    if(Float.parseFloat(value) < 4.1 && !forbiddenSet.contains(key)) {
+                    if(Float.parseFloat(value) < 60 && !forbiddenSet.contains(key)) {
                         forbiddenSet.add(key);
                         System.out.println("信任度太低，访问此资源的权限不足，访问的连接将被断掉！！！");
                         System.out.println("请联系管理员更新信任值........");
@@ -77,6 +76,7 @@ public class PeriodTaskService {
     }
 
     public void handleLink() {
+        Jedis jedis = new Jedis(TaskConfig.REDIS_IP, 6379);
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             public void run() {
