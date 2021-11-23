@@ -1,6 +1,7 @@
 package org.orlo.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.orlo.attrTree.AttrCheck;
 import org.orlo.entity.Policy;
 import org.orlo.entity.UserUnVerify;
 import org.orlo.entity.UserVerify;
@@ -10,6 +11,7 @@ import org.orlo.service.UserVerifyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -111,7 +113,13 @@ public class UserVerifyController {
 
     @PostMapping("/updatePolicy")
     public String updatePolicy(@RequestBody Map<String, String> params){
-        policyService.updatePolicy(params.get("policyStr"), params.get("IpAddr"));
+        String policyStr = params.get("policyStr");
+        String ipAddr = params.get("IpAddr");
+        policyService.updatePolicy(policyStr, ipAddr);
+        HashMap<String, AttrCheck> attrCheckMap = UserLoginController.attrCheckMap;
+        AttrCheck attrCheck = new AttrCheck();
+        attrCheck.setPolicy(policyStr);
+        attrCheckMap.put(ipAddr, attrCheck);
         return "success";
     }
 }
