@@ -52,7 +52,7 @@ public class PeriodTaskService {
                 Map<String, String> confidences = jedis.hgetAll("confidence");
                 for(String key : confidences.keySet()) {
                     String value = confidences.get(key);
-                    if(Float.parseFloat(value) < 60 && !forbiddenSet.contains(key)) {
+                    if(Float.parseFloat(value) < 70 && !forbiddenSet.contains(key)) {
                         forbiddenSet.add(key);
                         System.out.println("信任度太低，访问此资源的权限不足，访问的连接将被断掉！！！");
                         System.out.println("请联系管理员更新信任值........");
